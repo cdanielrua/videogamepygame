@@ -26,9 +26,10 @@ asteroids = []
 asteroid_speed = 5
 spawn_timer = 30
 
-# Puntuación
+# Puntuación y vidas
 score = 0
 difficulty_factor = 0.1  # Incremento de dificultad
+lives = 3  # Cantidad de vidas iniciales
 
 def draw_ship(screen, x, y):
     """Dibuja la nave del jugador."""
@@ -43,6 +44,7 @@ def check_collision(asteroid_list, x, y):
     """Verifica si algún asteroide choca con la nave."""
     for asteroid in asteroid_list:
         if (x < asteroid[0] < x + ship_width) and (y < asteroid[1] < y + ship_height):
+            asteroid_list.remove(asteroid)  # Eliminar el asteroide que colisionó
             return True
     return False
 
@@ -65,7 +67,7 @@ def show_start_screen():
                 waiting = False
 
 def main():
-    global ship_x, score, asteroid_speed, spawn_timer  # Declarar variables globales
+    global ship_x, score, asteroid_speed, spawn_timer, lives  # Declarar variables globales
 
     clock = pygame.time.Clock()
     running = True
@@ -102,8 +104,10 @@ def main():
 
         # Comprobar colisión
         if check_collision(asteroids, ship_x, ship_y):
-            show_game_over_screen()
-            return  # Salir del juego actual y volver al menú
+            lives -= 1  # Perder una vida
+            if lives == 0:
+                show_game_over_screen()
+                return  # Salir del juego actual y volver al menú
 
         # Incrementar puntuación y dificultad
         score += 1
@@ -115,9 +119,11 @@ def main():
         draw_ship(screen, ship_x, ship_y)
         draw_asteroids(screen, asteroids)
 
-        # Mostrar puntuación
+        # Mostrar puntuación y vidas
         score_text = font.render(f"Puntuación: {score}", True, WHITE)
+        lives_text = font.render(f"Vidas: {lives}", True, WHITE)
         screen.blit(score_text, (10, 10))
+        screen.blit(lives_text, (10, 50))
 
         pygame.display.flip()
         clock.tick(60)
@@ -144,7 +150,18 @@ def show_game_over_screen():
                 exit()
             if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
                 waiting = False
-                main()  # Reiniciar el juego
+                reset_game()  # Reiniciar variables y juego
+
+def reset_game():
+    """Reinicia las variables del juego."""
+    global ship_x, score, asteroid_speed, spawn_timer, lives, asteroids
+    ship_x = WIDTH // 2
+    score = 0
+    asteroid_speed = 5
+    spawn_timer = 30
+    lives = 3
+    asteroids = []
+    main()  # Reinicia el juego
 
 if __name__ == "__main__":
     show_start_screen()
